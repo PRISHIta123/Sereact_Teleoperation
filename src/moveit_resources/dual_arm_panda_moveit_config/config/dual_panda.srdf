@@ -1,0 +1,53 @@
+<robot name="dual_panda">
+  <group name="left_arm">
+    <chain base_link="left_panda_link0" tip_link="left_panda_link8"/>
+  </group>
+
+  <group name="right_arm">
+    <chain base_link="right_panda_link0" tip_link="right_panda_link8"/>
+  </group>
+
+  <group name="left_hand">
+    <joint name="left_panda_finger_joint1"/>
+    <joint name="left_panda_finger_joint2"/>
+  </group>
+
+  <group name="right_hand">
+    <joint name="right_panda_finger_joint1"/>
+    <joint name="right_panda_finger_joint2"/>
+  </group>
+
+  <group name="left_arm_with_gripper">
+    <group name="left_arm"/>
+    <group name="left_hand"/>
+  </group>
+
+  <group name="right_arm_with_gripper">
+    <group name="right_arm"/>
+    <group name="right_hand"/>
+  </group>
+
+  <group_state name="open" group="left_hand">
+    <joint name="left_panda_finger_joint1" value="0.04"/>
+    <joint name="left_panda_finger_joint2" value="0.04"/>
+  </group_state>
+
+  <group_state name="closed" group="left_hand">
+    <joint name="left_panda_finger_joint1" value="0.0"/>
+    <joint name="left_panda_finger_joint2" value="0.0"/>
+  </group_state>
+
+  <group_state name="open" group="right_hand">
+    <joint name="right_panda_finger_joint1" value="0.04"/>
+    <joint name="right_panda_finger_joint2" value="0.04"/>
+  </group_state>
+
+  <group_state name="closed" group="right_hand">
+    <joint name="right_panda_finger_joint1" value="0.0"/>
+    <joint name="right_panda_finger_joint2" value="0.0"/>
+  </group_state>
+
+  <end_effector name="left_gripper" parent_link="left_panda_link8" group="left_hand" parent_group="left_arm"/>
+  <end_effector name="right_gripper" parent_link="right_panda_link8" group="right_hand" parent_group="right_arm"/>
+</robot>
+

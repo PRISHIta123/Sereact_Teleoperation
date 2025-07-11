@@ -14,12 +14,13 @@ setup(
     install_requires=['setuptools'],
     zip_safe=True,
     maintainer='prishita',
-    maintainer_email='prishita@todo.todo',
-    description='TODO: Package description',
-    license='TODO: License declaration',
+    maintainer_email='prishita@r85@gmail.com',
+    description='Teleop node to republish joint angles',
+    license='TODO',
     tests_require=['pytest'],
     entry_points={
-        'console_scripts': [
-        ],
+    'console_scripts': [
+        'joint_state_republisher = teleop_node.joint_state_publisher:main',
+    ],
     },
 )

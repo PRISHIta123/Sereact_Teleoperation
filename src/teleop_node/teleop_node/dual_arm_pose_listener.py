@@ -1,63 +1,55 @@
 import rclpy
 from rclpy.node import Node
 from geometry_msgs.msg import PoseStamped
+from std_msgs.msg import Bool
 import os
-from datetime import datetime
 
 class DualArmPoseListener(Node):
     def __init__(self):
         super().__init__('dual_arm_pose_listener')
 
-        # Create logging directory
-        self.log_dir = os.path.expanduser('~/sereact_ws/hand_pose_logs')
-        os.makedirs(self.log_dir, exist_ok=True)
+        log_dir = os.path.expanduser('~/sereact_ws/hand_pose_logs')
+        os.makedirs(log_dir, exist_ok=True)
 
-        # Create exactly two files (one per arm)
-        self.left_log_path = os.path.join(self.log_dir, 'left_arm_poses.txt')
-        self.right_log_path = os.path.join(self.log_dir, 'right_arm_poses.txt')
+        self.left_log = open(os.path.join(log_dir, 'left_arm_poses.txt'), 'w')
+        self.right_log = open(os.path.join(log_dir, 'right_arm_poses.txt'), 'w')
 
-        self.left_log_file = open(self.left_log_path, 'w')
-        self.right_log_file = open(self.right_log_path, 'w')
+        header = 'timestamp,x,y,z,qx,qy,qz,qw,gripper_closed\n'
+        self.left_log.write(header)
+        self.right_log.write(header)
 
-        # Write headers
-        header = 'timestamp,x,y,z,qx,qy,qz,qw\n'
-        self.left_log_file.write(header)
-        self.right_log_file.write(header)
+        self.left_gripper_state = False
+        self.right_gripper_state = False
 
-        # Subscriptions
-        self.subscription_left = self.create_subscription(
-            PoseStamped,
-            '/left_arm/pose_goal',
-            self.left_callback,
-            10)
+        self.create_subscription(PoseStamped, '/left_arm/pose_goal', self.left_pose_cb, 10)
+        self.create_subscription(PoseStamped, '/right_arm/pose_goal', self.right_pose_cb, 10)
+        self.create_subscription(Bool, '/left_arm/gripper_state', self.left_grip_cb, 10)
+        self.create_subscription(Bool, '/right_arm/gripper_state', self.right_grip_cb, 10)
 
-        self.subscription_right = self.create_subscription(
-            PoseStamped,
-            '/right_arm/pose_goal',
-            self.right_callback,
-            10)
+    def left_grip_cb(self, msg):
+        self.left_gripper_state = msg.data
 
-    def left_callback(self, msg):
-        pos = msg.pose.position
-        ori = msg.pose.orientation
-        timestamp = self.get_clock().now().to_msg()
-        line = f'{timestamp.sec}.{timestamp.nanosec},{pos.x:.4f},{pos.y:.4f},{pos.z:.4f},{ori.x:.4f},{ori.y:.4f},{ori.z:.4f},{ori.w:.4f}\n'
-        self.left_log_file.write(line)
-        self.left_log_file.flush()
-        self.get_logger().info(f'[LEFT] {line.strip()}')
+    def right_grip_cb(self, msg):
+        self.right_gripper_state = msg.data
 
-    def right_callback(self, msg):
-        pos = msg.pose.position
-        ori = msg.pose.orientation
-        timestamp = self.get_clock().now().to_msg()
-        line = f'{timestamp.sec}.{timestamp.nanosec},{pos.x:.4f},{pos.y:.4f},{pos.z:.4f},{ori.x:.4f},{ori.y:.4f},{ori.z:.4f},{ori.w:.4f}\n'
-        self.right_log_file.write(line)
-        self.right_log_file.flush()
-        self.get_logger().info(f'[RIGHT] {line.strip()}')
+    def left_pose_cb(self, msg):
+        self.log_pose(msg, self.left_log, self.left_gripper_state, 'LEFT')
+
+    def right_pose_cb(self, msg):
+        self.log_pose(msg, self.right_log, self.right_gripper_state, 'RIGHT')
+
+    def log_pose(self, msg, file, grip_state, label):
+        p = msg.pose.position
+        o = msg.pose.orientation
+        t = msg.header.stamp
+        line = f'{t.sec}.{t.nanosec},{p.x:.4f},{p.y:.4f},{p.z:.4f},{o.x:.4f},{o.y:.4f},{o.z:.4f},{o.w:.4f},{int(grip_state)}\n'
+        file.write(line)
+        file.flush()
+        self.get_logger().info(f'[{label}] {line.strip()}')
 
     def destroy_node(self):
-        self.left_log_file.close()
-        self.right_log_file.close()
+        self.left_log.close()
+        self.right_log.close()
         super().destroy_node()
 
 def main(args=None):

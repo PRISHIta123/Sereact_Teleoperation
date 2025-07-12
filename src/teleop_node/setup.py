@@ -24,6 +24,8 @@ setup(
         'joint_state_republisher = teleop_node.joint_state_publisher:main',
         'joint_angle_logger = teleop_node.joint_angle_logger:main',
         'dual_arm_motion = teleop_node.dual_arm_motion:main',
+        'publisher_node = teleop_node.dual_arm_pose_publisher:main',
+        'listener_node = teleop_node.dual_arm_pose_listener:main',
     ],
     },
 )
